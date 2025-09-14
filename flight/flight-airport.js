@@ -1,0 +1,63 @@
+const express = require('express');
+const router = express.Router();
+const FlightAirport = require('./flight-airport-models');
+
+router.get('/', async (req, res) => {
+    try {
+        const flightAirportData = await FlightAirport.findAll();
+        res.json(flightAirportData);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch data' })
+    }
+});
+
+router.get('/:id', async (req, res) => {
+    try {
+        const flightAirport = await FlightAirport.findOne({ where: { id: req.params.id } });
+        if (flightAirport) {
+            res.json(flightAirport);
+        } else {
+            res.status(404).json({ error: 'FlightAirport not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch data' });
+    }
+});
+
+router.post('/', async (req, res) => {
+    const newFlightAirport = await FlightAirport.create(req.body);
+    res.json(newFlightAirport);
+});
+
+router.put('/:id', async (req, res) => {
+    try {
+        const [updated] = await FlightAirport.update(req.body, {
+            where: { id: req.params.id }
+        });
+        if (updated) {
+            const updatedFlightAirport = await FlightAirport.findOne({ where: { id: req.params.id } });
+            res.json(updatedFlightAirport);
+        } else {
+            res.status(404).json({ error: 'FlightAirport not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update data' });
+    }
+});
+
+router.delete('/:id', async (req, res) => {
+    try {
+        const deleted = await FlightAirport.destroy({
+            where: { id: req.params.id }
+        });
+        if (deleted) {
+            res.json({ message: 'FlightAirport deleted' });
+        } else {
+            res.status(404).json({ error: 'FlightAirport not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete data' });
+    }
+});
+
+module.exports = router;
