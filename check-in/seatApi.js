@@ -20,13 +20,13 @@ function saveSeats(seats) {
   fs.writeFileSync(dataPath, JSON.stringify(seats, null, 2));
 }
 
-// ✅ GET: ดูที่นั่งทั้งหมด
+//  GET: ดูที่นั่งทั้งหมด
 app.get('/seats', (req, res) => {
   const seats = loadSeats();
   res.json(seats);
 });
 
-// ✅ POST: จองที่นั่ง
+//  POST: จองที่นั่ง
 app.post('/seats/reserve', (req, res) => {
   const { seatId, passenger } = req.body;
   const seats = loadSeats();
@@ -46,7 +46,7 @@ app.post('/seats/reserve', (req, res) => {
   res.json({ message: `Seat ${seatId} reserved for ${passenger}` });
 });
 
-// ✅ PUT: ย้ายที่นั่ง
+// PUT: ย้ายที่นั่ง
 app.put('/seats/move/:oldSeat/:newSeat', (req, res) => {
   const { passenger } = req.body;
   const seats = loadSeats();
@@ -73,7 +73,7 @@ app.put('/seats/move/:oldSeat/:newSeat', (req, res) => {
   res.json({ message: `Moved ${passenger} from ${oldSeat.seatId} to ${newSeat.seatId}` });
 });
 
-// ✅ DELETE: ยกเลิกที่นั่ง
+//  DELETE: ยกเลิกที่นั่ง
 app.delete('/seats/:seatId', (req, res) => {
   const seats = loadSeats();
   const seat = seats.find(s => s.seatId === req.params.seatId);
