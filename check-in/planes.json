@@ -1,0 +1,14 @@
+[
+  {
+    "planeId": "P001",
+    "planeType": "Airbus A320",
+    "totalSeats": 180
+  },
+
+  {
+    "planeId": "P002",
+    "planeType": "Airbus A321",
+    "totalSeats": 180
+  }
+
+]
