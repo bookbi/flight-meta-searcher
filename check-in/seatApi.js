@@ -1,98 +1,121 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const app = express();
-const port = 3001;
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
 
+const app = express();
 app.use(express.json());
 
-// path ไฟล์ seats.json
-const dataPath = path.join(__dirname, 'seats.json');
+// path ของไฟล์ json
+const seatsPath = path.join(__dirname, "seats.json");
+const planesPath = path.join(__dirname, "planes.json");
 
-// ฟังก์ชันโหลดข้อมูล
+// โหลดข้อมูลจาก JSON
 function loadSeats() {
-  const data = fs.readFileSync(dataPath, 'utf-8');
-  return JSON.parse(data);
+  if (!fs.existsSync(seatsPath)) return [];
+  return JSON.parse(fs.readFileSync(seatsPath, "utf8"));
 }
 
-// ฟังก์ชันบันทึกข้อมูล
-function saveSeats(seats) {
-  fs.writeFileSync(dataPath, JSON.stringify(seats, null, 2));
+function saveSeats(data) {
+  fs.writeFileSync(seatsPath, JSON.stringify(data, null, 2));
 }
 
-//  GET: ดูที่นั่งทั้งหมด
-app.get('/seats', (req, res) => {
+function loadPlanes() {
+  if (!fs.existsSync(planesPath)) return [];
+  return JSON.parse(fs.readFileSync(planesPath, "utf8"));
+}
+
+// ฟังก์ชันสร้างที่นั่ง (เช่น 180 = 30 แถว x 6 ที่นั่ง A-F)
+function generateSeats(totalSeats) {
+  const seatMap = [];
+  const seatLetters = ["A", "B", "C", "D", "E", "F"];
+  const rows = Math.ceil(totalSeats / seatLetters.length);
+
+  for (let row = 1; row <= rows; row++) {
+    for (let letter of seatLetters) {
+      const seatNumber = `${letter}${row}`;
+      seatMap.push({ seatNumber, reserved: false, planeId: null });
+      if (seatMap.length >= totalSeats) break;
+    }
+    if (seatMap.length >= totalSeats) break;
+  }
+
+  return seatMap;
+}
+
+// ✅ API: เลือกเครื่องบิน และสร้างที่นั่ง
+app.post("/planes/:planeId/seats/init", (req, res) => {
+  const planeId = req.params.planeId;
+  const planes = loadPlanes();
+  const plane = planes.find((p) => p.id === planeId);
+
+  if (!plane) {
+    return res.status(400).json({ error: "ไม่พบเครื่องบินนี้" });
+  }
+
+  const seats = generateSeats(plane.totalSeats);
+  saveSeats(seats);
+
+  res.json({ message: `สร้างที่นั่งสำหรับ ${plane.name} สำเร็จ`, seats });
+});
+
+// ✅ API: จองที่นั่ง
+app.post("/planes/:planeId/seats/reserve", (req, res) => {
+  const { seatNumber } = req.body;
+  const planeId = req.params.planeId;
+
+  if (!seatNumber) {
+    return res.status(400).json({ error: "กรุณาระบุ seatNumber" });
+  }
+
+  let seats = loadSeats();
+  const seat = seats.find((s) => s.seatNumber === seatNumber);
+
+  if (!seat) {
+    return res.status(400).json({ error: "หมายเลขที่นั่งไม่ถูกต้อง" });
+  }
+
+  if (seat.reserved) {
+    return res.status(400).json({ error: "ที่นั่งนี้ถูกจองแล้ว" });
+  }
+
+  seat.reserved = true;
+  seat.planeId = planeId;
+
+  saveSeats(seats);
+
+  res.json({ message: `จองที่นั่ง ${seatNumber} สำเร็จ`, seat });
+});
+
+// ✅ API: ดูที่นั่งทั้งหมด
+app.get("/seats", (req, res) => {
   const seats = loadSeats();
   res.json(seats);
 });
 
-//  POST: จองที่นั่ง
-app.post('/seats/reserve', (req, res) => {
-  const { seatId, passenger } = req.body;
-  const seats = loadSeats();
-  const seat = seats.find(s => s.seatId === seatId);
+// ✅ API: ยกเลิกที่นั่ง
+app.post("/planes/:planeId/seats/cancel", (req, res) => {
+  const { seatNumber } = req.body;
+  let seats = loadSeats();
+
+  const seat = seats.find((s) => s.seatNumber === seatNumber);
 
   if (!seat) {
-    return res.status(404).json({ error: "Seat not found" });
-  }
-  if (seat.reserved) {
-    return res.status(400).json({ error: "Seat already reserved" });
+    return res.status(400).json({ error: "หมายเลขที่นั่งไม่ถูกต้อง" });
   }
 
-  seat.reserved = true;
-  seat.passenger = passenger;
-
-  saveSeats(seats);
-  res.json({ message: `Seat ${seatId} reserved for ${passenger}` });
-});
-
-// PUT: ย้ายที่นั่ง
-app.put('/seats/move/:oldSeat/:newSeat', (req, res) => {
-  const { passenger } = req.body;
-  const seats = loadSeats();
-  const oldSeat = seats.find(s => s.seatId === req.params.oldSeat);
-  const newSeat = seats.find(s => s.seatId === req.params.newSeat);
-
-  if (!oldSeat || !newSeat) {
-    return res.status(404).json({ error: "Seat not found" });
-  }
-  if (!oldSeat.reserved || oldSeat.passenger !== passenger) {
-    return res.status(400).json({ error: "You don't own the old seat" });
-  }
-  if (newSeat.reserved) {
-    return res.status(400).json({ error: "New seat already reserved" });
-  }
-
-  oldSeat.reserved = false;
-  oldSeat.passenger = null;
-
-  newSeat.reserved = true;
-  newSeat.passenger = passenger;
-
-  saveSeats(seats);
-  res.json({ message: `Moved ${passenger} from ${oldSeat.seatId} to ${newSeat.seatId}` });
-});
-
-//  DELETE: ยกเลิกที่นั่ง
-app.delete('/seats/:seatId', (req, res) => {
-  const seats = loadSeats();
-  const seat = seats.find(s => s.seatId === req.params.seatId);
-
-  if (!seat) {
-    return res.status(404).json({ error: "Seat not found" });
-  }
   if (!seat.reserved) {
-    return res.status(400).json({ error: "Seat is not reserved" });
+    return res.status(400).json({ error: "ที่นั่งนี้ยังไม่ได้ถูกจอง" });
   }
 
   seat.reserved = false;
-  seat.passenger = null;
+  seat.planeId = null;
 
   saveSeats(seats);
-  res.json({ message: `Seat ${req.params.seatId} is now available` });
+
+  res.json({ message: `ยกเลิกการจองที่นั่ง ${seatNumber} สำเร็จ`, seat });
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`Seat reservation API running at http://localhost:${port}`);
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Seat API running at http://localhost:${PORT}`);
 });
