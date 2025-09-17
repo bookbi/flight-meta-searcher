@@ -16,9 +16,9 @@ const sequelize = new Sequelize(
 async function connect() {
   try {
     await sequelize.authenticate();
-    console.log("✅ Database connected successfully!");
+    console.log("Database connected successfully!");
   } catch (err) {
-    console.error("❌ Unable to connect to the database:", err);
+    console.error("Unable to connect to the database:", err);
   }
 }
 
@@ -26,9 +26,9 @@ async function connect() {
 async function sync() {
   try {
     await sequelize.sync({ alter: true }); // alter:true จะปรับโครงสร้างตารางอัตโนมัติ
-    console.log("✅ Database synced successfully!");
+    console.log("Database synced successfully!");
   } catch (err) {
-    console.error("❌ Error syncing database:", err);
+    console.error("Error syncing database:", err);
   }
 }
 

@@ -8,6 +8,8 @@ const FlightDate = sequelize.define("FlightDate", {
   date: { type: DataTypes.DATE, allowNull: false },
   departureTime: { type: DataTypes.TIME, allowNull: false },
   arrivalTime: { type: DataTypes.TIME, allowNull: false }
+  }, {
+  timestamps: false
 });
 
 module.exports = FlightDate;

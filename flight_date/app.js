@@ -14,6 +14,6 @@ async function initializeDatabase() {
 initializeDatabase();
 
 // ใช้งาน router
-app.use("/api/flight-dates", flightDateRoutes);
+app.use("/api/flightDate", flightDateRoutes);
 
 app.listen(3000, () => console.log("🚀 Server running on port 3000"));

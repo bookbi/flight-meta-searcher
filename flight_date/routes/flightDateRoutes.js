@@ -19,7 +19,9 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const flight = await FlightDate.create(req.body);
-    res.status(201).json(flight);
+    res
+      .status(201)
+      .json({ message: "Flight created successfully", data: flight });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -32,7 +34,7 @@ router.put("/:id", async (req, res) => {
     if (!flight) return res.status(404).json({ message: "Flight not found" });
 
     await flight.update(req.body);
-    res.json(flight);
+    res.json({ message: "Flight updated successfully", data: flight });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -42,7 +44,7 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   const deleted = await FlightDate.destroy({ where: { id: req.params.id } });
   if (!deleted) return res.status(404).json({ message: "Flight not found" });
-  res.sendStatus(204);
+  res.json({ message: "Flight deleted successfully" });
 });
 
 module.exports = router;
