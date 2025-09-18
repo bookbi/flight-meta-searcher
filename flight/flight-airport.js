@@ -13,7 +13,9 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     try {
-        const flightAirport = await FlightAirport.findOne({ where: { id: req.params.id } });
+        const id = parseInt(req.params.id, 10);
+        const flightAirport = await FlightAirport.findByPk(id);
+
         if (flightAirport) {
             res.json(flightAirport);
         } else {
@@ -25,8 +27,27 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-    const newFlightAirport = await FlightAirport.create(req.body);
-    res.json(newFlightAirport);
+    try {
+        const { flightno, departure, arrival, aircraft } = req.body;
+        
+        if (!flightno || !departure || !arrival || !aircraft) {
+            return res.status(400).json({ error: 'All fields are required' });
+        }
+
+        if (departure.toUpperCase() === arrival.toUpperCase()) {
+            return res.status(400).json({ error: 'Departure and arrival cannot be the same' });
+        }
+
+        const newFlightAirport = await FlightAirport.create({
+            flightno,
+            departure: departure.toUpperCase(),
+            arrival: arrival.toUpperCase(),
+            aircraft
+        });
+        res.status(201).json(newFlightAirport);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create flightAirport' });
+    }
 });
 
 router.put('/:id', async (req, res) => {
@@ -51,7 +72,7 @@ router.delete('/:id', async (req, res) => {
             where: { id: req.params.id }
         });
         if (deleted) {
-            res.json({ message: 'FlightAirport deleted' });
+            res.status(204).end();
         } else {
             res.status(404).json({ error: 'FlightAirport not found' });
         }

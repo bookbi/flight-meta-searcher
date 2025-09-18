@@ -11,11 +11,11 @@ const FlightAirport = sequelize.define('FlightAirport', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    from: {
+    departure: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    to: {
+    arrival: {
         type: DataTypes.STRING,
         allowNull: false
     },
