@@ -1,7 +1,10 @@
+
 const express = require('express');
 const morgan = require('morgan');
+const cors = require('cors'); 
 
 const flightRoutes = require('./flight/flight-airport');
+const bookingRoutes = require('./booking/routes/bookingRoutes');
 const { connect, sync } = require('./config/database');
 
 // Connecting and syncing the database
@@ -15,11 +18,13 @@ const app = express();
 
 // Setting up middleware
 app.use(morgan('tiny'));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Setting up routes
 app.use('/api/flight-airport', flightRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 // Creating a server
 app.listen(3000, () => {
