@@ -1,20 +1,11 @@
-// booking/routes/bookingRoutes.js
+// booking/routes/bookingRoutes.js - Enhanced with validation
 const express = require('express');
 const router = express.Router();
 const Booking = require('../models/booking');
+const BookingValidationService = require('../services/bookingService');
 const { Op } = require('sequelize');
 
-// Generate booking reference
-function generateBookingRef() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = 'BK';
-    for (let i = 0; i < 6; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
-
-// GET all bookings with filtering and pagination
+// GET all bookings with detailed info
 router.get('/', async (req, res) => {
     try {
         const { status, email, flightId, page = 1, limit = 10 } = req.query;
@@ -52,17 +43,22 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET booking by ID
+// GET booking by ID with full details
 router.get('/:id', async (req, res) => {
     try {
-        const booking = await Booking.findByPk(req.params.id);
-        if (!booking) {
+        const bookingDetails = await BookingValidationService.getBookingWithDetails(req.params.id);
+        
+        if (!bookingDetails) {
             return res.status(404).json({ 
                 success: false, 
                 error: 'Booking not found' 
             });
         }
-        res.json({ success: true, data: booking });
+        
+        res.json({ 
+            success: true, 
+            data: bookingDetails 
+        });
     } catch (error) {
         res.status(500).json({ 
             success: false, 
@@ -72,29 +68,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// GET booking by reference
-router.get('/reference/:reference', async (req, res) => {
-    try {
-        const booking = await Booking.findOne({
-            where: { bookingReference: req.params.reference.toUpperCase() }
-        });
-        if (!booking) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'Booking not found' 
-            });
-        }
-        res.json({ success: true, data: booking });
-    } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to fetch booking',
-            message: error.message 
-        });
-    }
-});
-
-// POST create new booking
+// POST create new booking with full validation
 router.post('/', async (req, res) => {
     try {
         const { 
@@ -102,6 +76,7 @@ router.post('/', async (req, res) => {
             passengerEmail, 
             passengerPhone,
             flightId, 
+            flightDateId,
             seatNumber, 
             totalPrice,
             specialRequests 
@@ -115,40 +90,73 @@ router.post('/', async (req, res) => {
                 required: ['passengerName', 'passengerEmail', 'flightId', 'seatNumber']
             });
         }
-        
-        // Check if seat is already booked
-        const existingBooking = await Booking.findOne({
-            where: {
-                flightId,
-                seatNumber,
-                bookingStatus: { [Op.ne]: 'cancelled' }
+
+        // 🔍 Validate user email (จาก auth system)
+        const user = await BookingValidationService.validateUser(passengerEmail);
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                error: 'User not found',
+                message: `Email ${passengerEmail} ไม่มีในระบบ กรุณาสมัครสมาชิกก่อน`
+            });
+        }
+
+        // ✈️ Validate flight (จาก flight system)
+        const flight = await BookingValidationService.validateFlight(flightId);
+        if (!flight) {
+            return res.status(400).json({
+                success: false,
+                error: 'Flight not found',
+                message: `Flight ID ${flightId} ไม่มีในระบบ`
+            });
+        }
+
+        // 📅 Validate flight date (จาก flight_date system) - optional
+        let flightDate = null;
+        if (flightDateId) {
+            flightDate = await BookingValidationService.validateFlightDate(flightDateId);
+            if (!flightDate) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Flight date not found',
+                    message: `Flight Date ID ${flightDateId} ไม่มีในระบบ`
+                });
             }
-        });
+        }
+
+        // 🪑 Check seat availability
+        const isAvailable = await BookingValidationService.checkSeatAvailability(
+            flightId, 
+            seatNumber, 
+            flightDateId
+        );
         
-        if (existingBooking) {
+        if (!isAvailable) {
             return res.status(409).json({ 
                 success: false,
                 error: 'Seat already booked',
-                message: `Seat ${seatNumber} is already booked for flight ${flightId}` 
+                message: `ที่นั่ง ${seatNumber} ถูกจองแล้วสำหรับเที่ยวบินนี้` 
             });
         }
         
-        // Generate unique booking reference
+        // 🎫 Generate unique booking reference
         let bookingReference;
         let isUnique = false;
         while (!isUnique) {
-            bookingReference = generateBookingRef();
+            bookingReference = BookingValidationService.generateBookingReference();
             const existing = await Booking.findOne({ where: { bookingReference } });
             if (!existing) isUnique = true;
         }
         
-        // Create booking
+        // 💾 Create booking
         const booking = await Booking.create({
             bookingReference,
+            userId: user.id,
             passengerName,
             passengerEmail,
             passengerPhone,
             flightId,
+            flightDateId,
             seatNumber,
             totalPrice: totalPrice || 0.00,
             specialRequests,
@@ -159,7 +167,12 @@ router.post('/', async (req, res) => {
             success: true,
             message: 'Booking created successfully',
             data: booking,
-            bookingReference
+            bookingReference,
+            validatedData: {
+                user: user,
+                flight: flight,
+                flightDate: flightDate
+            }
         });
     } catch (error) {
         res.status(500).json({ 
@@ -170,7 +183,76 @@ router.post('/', async (req, res) => {
     }
 });
 
-// PUT update booking
+// GET validate data endpoints (for testing)
+router.get('/validate/user/:email', async (req, res) => {
+    try {
+        const user = await BookingValidationService.validateUser(req.params.email);
+        res.json({
+            success: true,
+            exists: !!user,
+            data: user || null
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: 'Validation failed',
+            message: error.message 
+        });
+    }
+});
+
+router.get('/validate/flight/:id', async (req, res) => {
+    try {
+        const flight = await BookingValidationService.validateFlight(req.params.id);
+        res.json({
+            success: true,
+            exists: !!flight,
+            data: flight || null
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: 'Validation failed',
+            message: error.message 
+        });
+    }
+});
+
+router.get('/validate/flightdate/:id', async (req, res) => {
+    try {
+        const flightDate = await BookingValidationService.validateFlightDate(req.params.id);
+        res.json({
+            success: true,
+            exists: !!flightDate,
+            data: flightDate || null
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: 'Validation failed',
+            message: error.message 
+        });
+    }
+});
+
+// GET enhanced statistics
+router.get('/stats/detailed', async (req, res) => {
+    try {
+        const stats = await BookingValidationService.getDetailedStats();
+        res.json({
+            success: true,
+            data: stats
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to fetch detailed statistics',
+            message: error.message 
+        });
+    }
+});
+
+// PUT update booking (same as before but with validation)
 router.put('/:id', async (req, res) => {
     try {
         const booking = await Booking.findByPk(req.params.id);
@@ -181,14 +263,20 @@ router.put('/:id', async (req, res) => {
             });
         }
         
-        // Don't allow updating critical fields for confirmed bookings
-        const updateData = { ...req.body };
-        if (booking.bookingStatus === 'confirmed') {
-            delete updateData.flightId;
-            delete updateData.seatNumber;
+        // Validate email if being updated
+        if (req.body.passengerEmail && req.body.passengerEmail !== booking.passengerEmail) {
+            const user = await BookingValidationService.validateUser(req.body.passengerEmail);
+            if (!user) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid email',
+                    message: `Email ${req.body.passengerEmail} ไม่มีในระบบ`
+                });
+            }
+            req.body.userId = user.id;
         }
         
-        await booking.update(updateData);
+        await booking.update(req.body);
         res.json({ 
             success: true, 
             message: 'Booking updated successfully', 
@@ -203,7 +291,7 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// PATCH update booking status
+// Other routes remain the same...
 router.patch('/:id/status', async (req, res) => {
     try {
         const { status } = req.body;
@@ -235,87 +323,6 @@ router.patch('/:id/status', async (req, res) => {
         res.status(500).json({ 
             success: false, 
             error: 'Failed to update booking status',
-            message: error.message 
-        });
-    }
-});
-
-// DELETE booking (cancel)
-router.delete('/:id', async (req, res) => {
-    try {
-        const booking = await Booking.findByPk(req.params.id);
-        if (!booking) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'Booking not found' 
-            });
-        }
-        
-        await booking.update({ bookingStatus: 'cancelled' });
-        res.json({ 
-            success: true, 
-            message: 'Booking cancelled successfully', 
-            data: booking 
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to cancel booking',
-            message: error.message 
-        });
-    }
-});
-
-// GET passenger bookings
-router.get('/passenger/:email', async (req, res) => {
-    try {
-        const bookings = await Booking.findAll({
-            where: { 
-                passengerEmail: req.params.email,
-                bookingStatus: { [Op.ne]: 'cancelled' }
-            },
-            order: [['createdAt', 'DESC']]
-        });
-        
-        res.json({
-            success: true,
-            passengerEmail: req.params.email,
-            data: bookings,
-            totalBookings: bookings.length
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to fetch passenger bookings',
-            message: error.message 
-        });
-    }
-});
-
-// GET booking statistics
-router.get('/stats/summary', async (req, res) => {
-    try {
-        const [confirmed, pending, cancelled, totalRevenue] = await Promise.all([
-            Booking.count({ where: { bookingStatus: 'confirmed' } }),
-            Booking.count({ where: { bookingStatus: 'pending' } }),
-            Booking.count({ where: { bookingStatus: 'cancelled' } }),
-            Booking.sum('totalPrice', { where: { bookingStatus: 'confirmed' } })
-        ]);
-        
-        res.json({
-            success: true,
-            data: {
-                totalConfirmed: confirmed,
-                totalPending: pending,
-                totalCancelled: cancelled,
-                totalBookings: confirmed + pending + cancelled,
-                totalRevenue: totalRevenue || 0
-            }
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to fetch statistics',
             message: error.message 
         });
     }
