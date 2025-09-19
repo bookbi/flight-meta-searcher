@@ -6,7 +6,8 @@ const cors = require('cors');
 const flightRoutes = require('./flight/flight-airport');
 const flightDateRoutes = require("./flight_date/routes/flightdateRoutes");
 const bookingRoutes = require('./booking/routes/bookingRoutes');
-const authRoutes = require("./register/routes/auth");
+const authRoutes = require("./auth/routes/auth");
+const adminRoutes = require("./auth/routes/admin");
 const { connect, sync } = require('./config/database');
 
 // Connecting and syncing the database
@@ -29,6 +30,7 @@ app.use('/api/flight-airport', flightRoutes);
 app.use("/api/flightDate", flightDateRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
 
 // Creating a server

@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id, 10);
-        const flightAirport = await FlightAirport.findByPk(id);
+        const flightAirport = await FlightAirport.findOne({ where: { id } });
 
         if (flightAirport) {
             res.json(flightAirport);
