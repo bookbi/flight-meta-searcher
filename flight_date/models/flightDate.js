@@ -3,8 +3,17 @@ const { sequelize } = require("../../config/database"); // import sequelize inst
 
 // Model FlightDate
 const FlightDate = sequelize.define("FlightDate", {
-  departure: { type: DataTypes.STRING, allowNull: false },
-  arrival: { type: DataTypes.STRING, allowNull: false },
+  departure: { type: DataTypes.STRING(3),
+        allowNull: false,
+        set(value) {
+            this.setDataValue('departure', value.toUpperCase());
+        } },
+  arrival: { type: DataTypes.STRING(3),
+        allowNull: false,
+        set(value) {
+            this.setDataValue('arrival', value.toUpperCase());
+        }
+   },
   date: { type: DataTypes.DATE, allowNull: false },
   departureTime: { type: DataTypes.TIME, allowNull: false },
   arrivalTime: { type: DataTypes.TIME, allowNull: false }
