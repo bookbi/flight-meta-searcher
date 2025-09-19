@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const FlightAirport = require('./flight-airport-models');
+const FlightAirport = require('./models/FlightAirport');
 
 router.get('/', async (req, res) => {
     try {
@@ -52,6 +52,11 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
     try {
+        const {departure, arrival} = req.body;
+        if (departure && arrival && departure.toUpperCase() === arrival.toUpperCase()) {
+            return res.status(400).json({ error: 'Departure and arrival cannot be the same' });
+        }
+        
         const [updated] = await FlightAirport.update(req.body, {
             where: { id: req.params.id }
         });
@@ -68,8 +73,9 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
     try {
+        const id = parseInt(req.params.id, 10);
         const deleted = await FlightAirport.destroy({
-            where: { id: req.params.id }
+            where: {id}
         });
         if (deleted) {
             res.status(204).end();
