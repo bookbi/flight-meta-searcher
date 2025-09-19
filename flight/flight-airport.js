@@ -5,7 +5,7 @@ const FlightAirport = require('./models/FlightAirport');
 router.get('/', async (req, res) => {
     try {
         const flightAirportData = await FlightAirport.findAll();
-        res.json(flightAirportData);
+        res.status(200).json({ message: 'เรียกดูข้อมูลเที่ยวบินทั้งหมดสำเร็จ', data: flightAirportData });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch data' })
     }
@@ -45,6 +45,7 @@ router.post('/', async (req, res) => {
             aircraft
         });
         res.status(201).json(newFlightAirport);
+        res.status(201).json({ message: 'เพิ่มเที่ยวบินสำเร็จ', data: newFlightAirport });
     } catch (error) {
         res.status(500).json({ error: 'Failed to create flightAirport' });
     }
@@ -62,7 +63,7 @@ router.put('/:id', async (req, res) => {
         });
         if (updated) {
             const updatedFlightAirport = await FlightAirport.findOne({ where: { id: req.params.id } });
-            res.json(updatedFlightAirport);
+            res.status(200).json({ message: 'แก้ไขเที่ยวบินสำเร็จ', updatedFlightAirport});
         } else {
             res.status(404).json({ error: 'FlightAirport not found' });
         }
@@ -79,6 +80,7 @@ router.delete('/:id', async (req, res) => {
         });
         if (deleted) {
             res.status(204).end();
+            res.json({ message: 'ยกเลิกเที่ยวบินนี้สำเร็จ' });
         } else {
             res.status(404).json({ error: 'FlightAirport not found' });
         }
