@@ -4,7 +4,9 @@ const morgan = require('morgan');
 const cors = require('cors'); 
 
 const flightRoutes = require('./flight/flight-airport');
+const flightDateRoutes = require("./flight_date/routes/flightdateRoutes");
 const bookingRoutes = require('./booking/routes/bookingRoutes');
+const authRoutes = require("./register/routes/auth");
 const { connect, sync } = require('./config/database');
 
 // Connecting and syncing the database
@@ -24,7 +26,10 @@ app.use(express.urlencoded({ extended: false }));
 
 // Setting up routes
 app.use('/api/flight-airport', flightRoutes);
+app.use("/api/flightDate", flightDateRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use("/api/auth", authRoutes);
+
 
 // Creating a server
 app.listen(3000, () => {
