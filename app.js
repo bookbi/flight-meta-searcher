@@ -7,7 +7,7 @@ const flightRoutes = require('./routes/flight-airport');
 const flightDateRoutes = require('./routes/flightDateRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const authRoutes = require("./routes/auth");
-const adminRoutes = require("./routes/admin");
+const adminRoutes = require("./routes/admin_Auth");
 const { connect, sync } = require('./config/database');
 
 // Connecting and syncing the database

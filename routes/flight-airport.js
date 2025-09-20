@@ -1,94 +1,12 @@
 const express = require('express');
+const flightAirportController = require('../controllers/flight-airport.controller');
+
 const router = express.Router();
-const FlightAirport = require('../models/FlightAirport');
 
-router.get('/', async (req, res) => {
-    try {
-        const flightAirportData = await FlightAirport.findAll();
-        res.json(flightAirportData);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch data' })
-    }
-});
-
-router.get('/:id', async (req, res) => {
-    try {
-        const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-            return res.status(400).json({ error: 'Invalid ID' });
-        }
-        const flightAirport = await FlightAirport.findOne({ where: { id } });
-
-        if (flightAirport) {
-            res.json(flightAirport);
-        } else {
-            res.status(404).json({ error: 'FlightAirport not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch data' });
-    }
-});
-
-router.post('/', async (req, res) => {
-    try {
-        const { flightno, departure, arrival, aircraft } = req.body;
-        
-        if (!flightno || !departure || !arrival || !aircraft) {
-            return res.status(400).json({ error: 'All fields are required' });
-        }
-
-        if (departure.toUpperCase() === arrival.toUpperCase()) {
-            return res.status(400).json({ error: 'Departure and arrival cannot be the same' });
-        }
-
-        const newFlightAirport = await FlightAirport.create({
-            flightno,
-            departure: departure.toUpperCase(),
-            arrival: arrival.toUpperCase(),
-            aircraft
-        });
-        res.status(201).json(newFlightAirport);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create flightAirport' });
-    }
-});
-
-router.put('/:id', async (req, res) => {
-    try {
-        const {departure, arrival} = req.body;
-        if (departure && arrival && departure.toUpperCase() === arrival.toUpperCase()) {
-            return res.status(400).json({ error: 'Departure and arrival cannot be the same' });
-        }
-        
-        const [updated] = await FlightAirport.update(req.body, {
-            where: { id: req.params.id }
-        });
-        if (updated) {
-            const updatedFlightAirport = await FlightAirport.findOne({ where: { id: req.params.id } });
-            res.json(updatedFlightAirport);
-        } else {
-            res.status(404).json({ error: 'FlightAirport not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to update data' });
-    }
-});
-
-router.delete('/:id', async (req, res) => {
-    try {
-        const id = parseInt(req.params.id, 10);
-        const deleted = await FlightAirport.destroy({
-            where: {id}
-        });
-        if (deleted) {
-            res.status(204).end();
-            res.json({ message: `ลบ เที่ยวบิน ${req.params.id} สำเร็จ` });
-        } else {
-            res.status(404).json({ error: 'FlightAirport not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to delete data' });
-    }
-});
+router.get('/', flightAirportController.list);
+router.get('/:id', flightAirportController.get);
+router.post('/', flightAirportController.create);
+router.put('/:id', flightAirportController.update);
+router.delete('/:id', flightAirportController.remove);
 
 module.exports = router;
