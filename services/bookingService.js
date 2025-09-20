@@ -1,4 +1,4 @@
-// booking/services/bookingService.js
+// booking/services/bookingService.js - ตรวจสอบข้อมูลจาก database จริง
 const { sequelize } = require('../../config/database');
 const Booking = require('../models/booking');
 
@@ -21,7 +21,7 @@ class BookingValidationService {
         }
     }
 
-    
+    // เช็ค Flight จาก flight system (แพรว)
     static async validateFlight(flightId) {
         try {
             const [results] = await sequelize.query(
@@ -38,7 +38,7 @@ class BookingValidationService {
         }
     }
 
-    
+    // เช็ค Flight Date จาก flight_date system (ปิ่น)
     static async validateFlightDate(flightDateId) {
         try {
             const [results] = await sequelize.query(
