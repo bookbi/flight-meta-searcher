@@ -1,12 +1,12 @@
 const express = require('express');
-const c = require('../controllers/flight-airport.controller');
+const flightAirportController = require('../controllers/flight-airport.controller');
 
 const router = express.Router();
 
-router.get('/', c.list);
-router.get('/:id', c.get);
-router.post('/', c.create);
-router.put('/:id', c.update);
-router.delete('/:id', c.remove);
+router.get('/', flightAirportController.list);
+router.get('/:id', flightAirportController.get);
+router.post('/', flightAirportController.create);
+router.put('/:id', flightAirportController.update);
+router.delete('/:id', flightAirportController.remove);
 
 module.exports = router;
