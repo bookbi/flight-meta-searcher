@@ -8,8 +8,8 @@ exports.findAllWithAirport = async () => {
   for (const flightDate of flights) {
     const flightAirport = await FlightAirport.findOne({
       where: {
-        departure: flightDate.departure,
-        arrival: flightDate.arrival
+        departure: flightDate.departure.toUpperCase(),
+        arrival: flightDate.arrival.toUpperCase()
       }
     });
     if (flightAirport) {
@@ -25,8 +25,8 @@ exports.findByIdWithAirport = async (id) => {
 
   const flightAirport = await FlightAirport.findOne({
     where: {
-      departure: flightDate.departure,
-      arrival: flightDate.arrival
+      departure: flightDate.departure.toUpperCase(),
+      arrival: flightDate.arrival.toUpperCase()
     }
   });
   if (!flightAirport) return null;
@@ -39,6 +39,9 @@ exports.createWithAirportCheck = async (data) => {
   if (!departure || !arrival || !date || !departureTime || !arrivalTime) {
     throw new Error("กรุณากรอกข้อมูลให้ครบ");
   }
+
+    departure = departure.toUpperCase();
+    arrival = arrival.toUpperCase();
 
   const flightAirport = await FlightAirport.findOne({
     where: { departure, arrival }
@@ -55,6 +58,9 @@ exports.updateWithAirportCheck = async (id, data) => {
   if (!departure || !arrival || !date || !departureTime || !arrivalTime) {
     throw new Error("กรุณากรอกข้อมูลให้ครบ");
   }
+
+    departure = departure.toUpperCase();
+    arrival = arrival.toUpperCase();
 
   const flightAirport = await FlightAirport.findOne({
     where: { departure, arrival }
@@ -76,8 +82,8 @@ exports.deleteWithAirportCheck = async (id) => {
 
   const flightAirport = await FlightAirport.findOne({
     where: {
-      departure: flightDate.departure,
-      arrival: flightDate.arrival
+      departure: flightDate.departure.toUpperCase(),
+      arrival: flightDate.arrival.toUpperCase()
     }
   });
   if (!flightAirport) throw new Error("ไม่มีไฟล์ทบินนั้น");
