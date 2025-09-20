@@ -3,7 +3,7 @@ const { Sequelize } = require('sequelize');
 const sequelize = new Sequelize(
   'airport_db',
   'postgres',
-  '262005', // replace with your actual password
+  'praewyaphat', // replace with your actual password
   {
     host: 'localhost',
     dialect: 'postgres'

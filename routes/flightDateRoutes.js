@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const FlightDate = require("../models/flightDate");
-const FlightAirport = require("../../flight/models/FlightAirport");
+const FlightAirport = require("../models/FlightAirport");
 
 // GET ทั้งหมด
 router.get("/", async (req, res) => {
