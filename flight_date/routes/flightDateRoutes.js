@@ -63,18 +63,22 @@ router.get('/:id', async (req, res) => {
 // POST เพิ่มใหม่
 router.post("/", async (req, res) => {
   try {
+    const { departure, arrival, date, departureTime, arrivalTime } = req.body;
+    if (!departure || !arrival || !date || !departureTime || !arrivalTime) {
+      return res.status(400).json({ error: "กรุณากรอกข้อมูลให้ครบ" });
+    }
 
-  const { departure, arrival, date, departureTime, arrivalTime } = req.body;
-  if (!departure || !arrival || !date || !departureTime || !arrivalTime ) {
-    return res.status(400).json({ error: "กรุณากรอกข้อมูลให้ครบ" });
-  }
-  try {
+    // ตรวจสอบว่า departure/arrival ตรงกับ FlightAirport หรือไม่
+    const flightAirport = await FlightAirport.findOne({
+      where: { departure, arrival }
+    });
+    if (!flightAirport) {
+      return res.status(404).json({ message: "ไม่มีไฟล์ทบินนั้น" });
+    }
+
     const flight = await FlightDate.create(req.body);
     res.status(201).json({ message: "Flight created successfully", data: flight });
   } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-} catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
@@ -86,6 +90,15 @@ router.put("/:id", async (req, res) => {
     if (!departure || !arrival || !date || !departureTime || !arrivalTime) {
       return res.status(400).json({ error: "กรุณากรอกข้อมูลให้ครบ" });
     }
+
+    // ตรวจสอบว่า departure/arrival ตรงกับ FlightAirport หรือไม่
+    const flightAirport = await FlightAirport.findOne({
+      where: { departure, arrival }
+    });
+    if (!flightAirport) {
+      return res.status(404).json({ message: "ไม่มีไฟล์ทบินนั้น" });
+    }
+
     const flight = await FlightDate.findByPk(req.params.id);
     if (!flight) return res.status(404).json({ message: "Flight not found" });
 
@@ -98,9 +111,30 @@ router.put("/:id", async (req, res) => {
 
 // DELETE ตาม ID
 router.delete("/:id", async (req, res) => {
-  const deleted = await FlightDate.destroy({ where: { id: req.params.id } });
-  if (!deleted) return res.status(404).json({ message: "Flight not found" });
-  res.json({ message: "Flight deleted successfully" });
+  try {
+    // หา FlightDate ตาม id ก่อน
+    const flightDate = await FlightDate.findByPk(req.params.id);
+    if (!flightDate) {
+      return res.status(404).json({ message: "ไม่มีไฟล์ทบินนั้น" });
+    }
+
+    // หา FlightAirport ที่ departure และ arrival ตรงกัน
+    const flightAirport = await FlightAirport.findOne({
+      where: {
+        departure: flightDate.departure,
+        arrival: flightDate.arrival
+      }
+    });
+
+    if (!flightAirport) {
+      return res.status(404).json({ message: "ไม่มีไฟล์ทบินนั้น" });
+    }
+
+    await flightDate.destroy();
+    res.json({ message: "Flight deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
