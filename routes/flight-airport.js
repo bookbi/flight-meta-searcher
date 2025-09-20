@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const FlightAirport = require('./models/FlightAirport');
+const FlightAirport = require('../models/FlightAirport');
 
 router.get('/', async (req, res) => {
     try {
@@ -14,6 +14,9 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id, 10);
+        if (isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid ID' });
+        }
         const flightAirport = await FlightAirport.findOne({ where: { id } });
 
         if (flightAirport) {
@@ -79,6 +82,7 @@ router.delete('/:id', async (req, res) => {
         });
         if (deleted) {
             res.status(204).end();
+            res.json({ message: `ลบ เที่ยวบิน ${req.params.id} สำเร็จ` });
         } else {
             res.status(404).json({ error: 'FlightAirport not found' });
         }
