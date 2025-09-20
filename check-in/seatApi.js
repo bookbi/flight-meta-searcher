@@ -1,19 +1,18 @@
 const express = require("express");
 const router = express.Router();
 
-// import Sequelize models
+// import Sequelize model
 const Seat = require("../models/seatApi");
-const Airplane = require("../models/airplane"); // สมมติมี model Airplane
 
 // ฟังก์ชัน generate seats เช่น A1 B1 ... F30
-function generateSeats(totalSeats, airplaneId) {
+function generateSeats(totalSeats, planeId) {
   const seats = [];
   const seatLetters = ["A", "B", "C", "D", "E", "F"];
   const rows = Math.ceil(totalSeats / seatLetters.length);
 
   for (let row = 1; row <= rows; row++) {
     for (let letter of seatLetters) {
-      seats.push({ seatNumber: `${letter}${row}`, airplaneId });
+      seats.push({ seatNumber: `${letter}${row}`, airplaneId: planeId });
       if (seats.length >= totalSeats) break;
     }
     if (seats.length >= totalSeats) break;
@@ -75,22 +74,24 @@ router.post("/planes/:planeId/seats/cancel", async (req, res) => {
   }
 });
 
-// สร้างที่นั่งใหม่ (init) ตามจำนวนที่นั่งของเครื่องบิน
+// สร้างที่นั่งใหม่ (init) ส่ง totalSeats ผ่าน body
 router.post("/planes/:planeId/seats/init", async (req, res) => {
   const planeId = req.params.planeId;
+  const { totalSeats } = req.body;
+
+  if (!totalSeats || totalSeats <= 0) {
+    return res.status(400).json({ error: "กรุณากรอก totalSeats ให้ถูกต้อง" });
+  }
 
   try {
-    const airplane = await Airplane.findByPk(planeId);
-    if (!airplane) return res.status(400).json({ error: "ไม่พบเครื่องบินนี้" });
-
     // ลบที่นั่งเก่า
     await Seat.destroy({ where: { airplaneId: planeId } });
 
     // สร้างที่นั่งใหม่
-    const seatsData = generateSeats(airplane.totalSeats, planeId);
+    const seatsData = generateSeats(totalSeats, planeId);
     const seats = await Seat.bulkCreate(seatsData);
 
-    res.json({ message: `สร้างที่นั่งสำหรับ ${airplane.name} สำเร็จ`, seats });
+    res.json({ message: `สร้างที่นั่งสำเร็จ`, seats });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "เกิดข้อผิดพลาด" });
