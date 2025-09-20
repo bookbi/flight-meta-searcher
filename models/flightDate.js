@@ -1,5 +1,5 @@
 const { Sequelize, DataTypes } = require("sequelize");
-const { sequelize } = require("../../config/database"); // import sequelize instance จาก db.js
+const { sequelize } = require("../config/database"); // import sequelize instance จาก db.js
 
 // Model FlightDate
 const FlightDate = sequelize.define("FlightDate", {

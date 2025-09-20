@@ -1,6 +1,6 @@
 // booking/models/booking.js - Updated with relations
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../../config/database');
+const { sequelize } = require('../config/database');
 
 const Booking = sequelize.define('Booking', {
     id: {

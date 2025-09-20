@@ -3,11 +3,11 @@ const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors'); 
 
-const flightRoutes = require('./flight/flight-airport');
-const flightDateRoutes = require("./flight_date/routes/flightdateRoutes");
-const bookingRoutes = require('./booking/routes/bookingRoutes');
-const authRoutes = require("./auth/routes/auth");
-const adminRoutes = require("./auth/routes/admin");
+const flightRoutes = require('./routes/flight-airport');
+const flightDateRoutes = require('./routes/flightDateRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
+const authRoutes = require("./routes/auth");
+const adminRoutes = require("./routes/admin");
 const { connect, sync } = require('./config/database');
 
 // Connecting and syncing the database
