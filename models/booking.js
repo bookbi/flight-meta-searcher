@@ -1,6 +1,6 @@
-// booking/models/booking.js
+// booking/models/booking.js - Updated with relations
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../../config/database');
+const { sequelize } = require('../config/database');
 
 const Booking = sequelize.define('Booking', {
     id: {
@@ -15,7 +15,11 @@ const Booking = sequelize.define('Booking', {
     },
     userId: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: true, 
+        references: {
+            model: 'Users', 
+            key: 'id'
+        }
     },
     passengerName: {
         type: DataTypes.STRING,
@@ -31,11 +35,19 @@ const Booking = sequelize.define('Booking', {
     },
     flightId: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        references: {
+            model: 'FlightAirports', 
+            key: 'id'
+        }
     },
     flightDateId: {
         type: DataTypes.INTEGER,
-        allowNull: true
+        allowNull: true,
+        references: {
+            model: 'FlightDates', 
+            key: 'id'
+        }
     },
     seatNumber: {
         type: DataTypes.STRING,
