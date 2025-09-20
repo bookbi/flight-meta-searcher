@@ -1,6 +1,5 @@
-// booking/services/bookingService.js - ตรวจสอบข้อมูลจาก database จริง
-const { sequelize } = require('../config/database');
-const Booking = require('../models/booking');
+// booking/services/bookingService.js
+const { sequelize } = require('../../config/database');
 
 class BookingValidationService {
     
