@@ -155,6 +155,24 @@ class BookingValidationService {
             throw error;
         }
     }
+
+    static async getBookingsByPassengerEmail(email) {
+        try {
+            const results = await sequelize.query(`
+                SELECT b.*, pb."fullName" as passengerName, pb.email as passengerEmail
+                FROM bookings b
+                JOIN "passengerBooking" pb ON pb."bookingId" = b.id
+                WHERE pb.email = :email
+            `, {
+                replacements: { email },
+                type: sequelize.QueryTypes.SELECT
+            });
+            return results;
+        } catch (error) {
+            console.error('Get bookings by passenger email error:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = BookingValidationService;
