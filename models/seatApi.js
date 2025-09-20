@@ -16,10 +16,6 @@ const Seat = sequelize.define('Seat', {
     airplaneId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-            model: 'Airplanes', // ต้องมีตาราง Airplanes
-            key: 'id'
-        }
     },
     isBooked: {
         type: DataTypes.BOOLEAN,
@@ -28,10 +24,6 @@ const Seat = sequelize.define('Seat', {
     bookingId: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        references: {
-            model: 'Bookings',
-            key: 'id'
-        }
     }
 }, {
     tableName: 'seats',
