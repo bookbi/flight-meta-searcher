@@ -56,43 +56,55 @@ class BookingValidationService {
     }
 
     // เช็คว่า seat ถูกจองแล้วหรือยัง
-    static async checkSeatAvailability(flightId, seatNumber, flightDateId = null) {
-        try {
-            let query = `
-                SELECT * FROM bookings 
-                WHERE "flightId" = :flightId 
-                AND "seatNumber" = :seatNumber 
-                AND "bookingStatus" != 'cancelled'
-            `;
-            
-            const replacements = { flightId, seatNumber };
-            
-            if (flightDateId) {
-                query += ' AND "flightDateId" = :flightDateId';
-                replacements.flightDateId = flightDateId;
-            }
-            
-            const [results] = await sequelize.query(query, {
-                replacements,
-                type: sequelize.QueryTypes.SELECT
-            });
-            
-            return results.length === 0; // true = available, false = taken
-        } catch (error) {
-            console.error('Error checking seat availability:', error);
-            return false;
+     static async checkSeatAvailability(flightId, seatNumber) {
+    try {
+      const [seat] = await sequelize.query(
+        `
+        SELECT "isBooked"
+        FROM seats
+        WHERE "airplaneId" = :airplaneId
+          AND "seatNumber" = :seatNumber
+        LIMIT 1
+        `,
+        {
+          replacements: { airplaneId: flightId, seatNumber },
+          type: sequelize.QueryTypes.SELECT
         }
+      );
+
+      if (!seat) {
+        // ไม่มี record ใน seats → ถือว่าไม่มีที่นั่งนี้
+        return false;
+      }
+
+      // ถ้า isBooked = false → ว่าง (true)
+      return seat.isBooked === false;
+    } catch (error) {
+      console.error('Seat availability (seats) error:', error);
+      return false;
     }
+  }
 
     // สร้าง booking reference
     static generateBookingReference() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let result = 'BK';
-        for (let i = 0; i < 6; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    return 'BK' + Array.from({ length: 6 }, () =>
+      chars.charAt(Math.floor(Math.random() * chars.length))
+    ).join('');
+  }
+
+  static async generateUniqueBookingReference() {
+    let ref, exists = true;
+    while (exists) {
+      ref = this.generateBookingReference();
+      const [row] = await sequelize.query(
+        'SELECT 1 FROM bookings WHERE "bookingReference" = :ref LIMIT 1',
+        { replacements: { ref }, type: sequelize.QueryTypes.SELECT }
+      );
+      exists = !!row;
     }
+    return ref;
+  }
 
     // ดึงข้อมูลแบบรวม (booking พร้อมข้อมูลที่เกี่ยวข้อง)
     static async getBookingWithDetails(bookingId) {
