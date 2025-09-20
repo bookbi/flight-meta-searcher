@@ -1,65 +1,60 @@
-// booking/services/bookingService.js - ตรวจสอบข้อมูลจาก database จริง
-const { sequelize } = require('../config/database');
-const Booking = require('../models/booking');
+// booking/services/bookingService.js
+const { sequelize } = require('../../config/database');
 
-class BookingValidationService {
+class BookingService {
     
-    // เช็ค User จาก auth system (register)
     static async validateUser(email) {
         try {
-            const [results] = await sequelize.query(
+            const [result] = await sequelize.query(
                 'SELECT id, "fullName", email FROM "Users" WHERE email = :email',
-                {
+                { 
                     replacements: { email },
-                    type: sequelize.QueryTypes.SELECT
+                    type: sequelize.QueryTypes.SELECT 
                 }
             );
-            return results;
+            return result || null;
         } catch (error) {
-            console.error('Error validating user:', error);
+            console.error('User validation error:', error);
             return null;
         }
     }
 
-    
     static async validateFlight(flightId) {
         try {
-            const [results] = await sequelize.query(
+            const [result] = await sequelize.query(
                 'SELECT * FROM "FlightAirports" WHERE id = :flightId',
-                {
+                { 
                     replacements: { flightId },
-                    type: sequelize.QueryTypes.SELECT
+                    type: sequelize.QueryTypes.SELECT 
                 }
             );
-            return results;
+            return result || null;
         } catch (error) {
-            console.error('Error validating flight:', error);
+            console.error('Flight validation error:', error);
             return null;
         }
     }
 
-    
     static async validateFlightDate(flightDateId) {
         try {
-            const [results] = await sequelize.query(
+            const [result] = await sequelize.query(
                 'SELECT * FROM "FlightDates" WHERE id = :flightDateId',
-                {
+                { 
                     replacements: { flightDateId },
-                    type: sequelize.QueryTypes.SELECT
+                    type: sequelize.QueryTypes.SELECT 
                 }
             );
-            return results;
+            return result || null;
         } catch (error) {
-            console.error('Error validating flight date:', error);
+            console.error('Flight date validation error:', error);
             return null;
         }
     }
 
-    // เช็คว่า seat ถูกจองแล้วหรือยัง
     static async checkSeatAvailability(flightId, seatNumber, flightDateId = null) {
         try {
             let query = `
-                SELECT * FROM bookings 
+                SELECT id FROM bookings 
                 WHERE "flightId" = :flightId 
                 AND "seatNumber" = :seatNumber 
                 AND "bookingStatus" != 'cancelled'
@@ -72,32 +67,21 @@ class BookingValidationService {
                 replacements.flightDateId = flightDateId;
             }
             
-            const [results] = await sequelize.query(query, {
+            const results = await sequelize.query(query, {
                 replacements,
                 type: sequelize.QueryTypes.SELECT
             });
             
-            return results.length === 0; // true = available, false = taken
+            return results.length === 0;
         } catch (error) {
-            console.error('Error checking seat availability:', error);
+            console.error('Seat availability error:', error);
             return false;
         }
     }
 
-    // สร้าง booking reference
-    static generateBookingReference() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let result = 'BK';
-        for (let i = 0; i < 6; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return result;
-    }
-
-    // ดึงข้อมูลแบบรวม (booking พร้อมข้อมูลที่เกี่ยวข้อง)
     static async getBookingWithDetails(bookingId) {
         try {
-            const query = `
+            const [result] = await sequelize.query(`
                 SELECT 
                     b.*,
                     u."fullName" as userFullName,
@@ -116,45 +100,40 @@ class BookingValidationService {
                 LEFT JOIN "FlightAirports" f ON b."flightId" = f.id
                 LEFT JOIN "FlightDates" fd ON b."flightDateId" = fd.id
                 WHERE b.id = :bookingId
-            `;
-            
-            const [results] = await sequelize.query(query, {
+            `, {
                 replacements: { bookingId },
                 type: sequelize.QueryTypes.SELECT
             });
             
-            return results;
+            return result || null;
         } catch (error) {
-            console.error('Error getting booking details:', error);
+            console.error('Get booking details error:', error);
             throw error;
         }
     }
 
-    // ดึงสถิติแบบละเอียด
     static async getDetailedStats() {
         try {
-            const query = `
+            const [result] = await sequelize.query(`
                 SELECT 
-                    COUNT(*) as totalBookings,
-                    COUNT(CASE WHEN "bookingStatus" = 'confirmed' THEN 1 END) as confirmedBookings,
-                    COUNT(CASE WHEN "bookingStatus" = 'pending' THEN 1 END) as pendingBookings,
-                    COUNT(CASE WHEN "bookingStatus" = 'cancelled' THEN 1 END) as cancelledBookings,
-                    SUM(CASE WHEN "bookingStatus" = 'confirmed' THEN "totalPrice" ELSE 0 END) as totalRevenue,
-                    COUNT(DISTINCT "flightId") as uniqueFlights,
-                    COUNT(DISTINCT "userId") as uniqueUsers
+                    COUNT(*)::int as "totalBookings",
+                    COUNT(CASE WHEN "bookingStatus" = 'confirmed' THEN 1 END)::int as "confirmedBookings",
+                    COUNT(CASE WHEN "bookingStatus" = 'pending' THEN 1 END)::int as "pendingBookings",
+                    COUNT(CASE WHEN "bookingStatus" = 'cancelled' THEN 1 END)::int as "cancelledBookings",
+                    COALESCE(SUM(CASE WHEN "bookingStatus" = 'confirmed' THEN "totalPrice" ELSE 0 END), 0) as "totalRevenue",
+                    COUNT(DISTINCT "flightId")::int as "uniqueFlights",
+                    COUNT(DISTINCT "userId")::int as "uniqueUsers"
                 FROM bookings
-            `;
-            
-            const [results] = await sequelize.query(query, {
+            `, {
                 type: sequelize.QueryTypes.SELECT
             });
             
-            return results[0];
+            return result;
         } catch (error) {
-            console.error('Error getting detailed stats:', error);
+            console.error('Get stats error:', error);
             throw error;
         }
     }
 }
 
-module.exports = BookingValidationService;
+module.exports = BookingService;
