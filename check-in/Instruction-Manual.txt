@@ -1,0 +1,46 @@
+🔹 วิธีเทสใน Postman
+1) ดูที่นั่งทั้งหมดของเครื่องบิน
+
+Method: GET
+
+URL:
+
+http://localhost:3000/planes/A320/seats
+
+2) จองที่นั่ง
+
+Method: POST
+
+URL:
+
+http://localhost:3000/planes/A320/seats/reserve
+
+
+Body → Raw JSON
+
+{
+  "seatNumber": "C1"
+}
+
+3) ยกเลิกการจอง
+
+Method: POST
+
+URL:
+
+http://localhost:3000/planes/A320/seats/cancel
+
+
+Body → Raw JSON
+
+{
+  "seatNumber": "C1"
+}
+
+4) สร้างที่นั่งใหม่ (init seats)
+
+Method: POST
+
+URL:
+
+http://localhost:3000/planes/A320/seats/init
