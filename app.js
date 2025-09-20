@@ -8,6 +8,7 @@ const flightDateRoutes = require('./routes/flightDateRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin_Auth");
+const seatRoutes = require('./check-in/seatApi'); 
 const { connect, sync } = require('./config/database');
 
 // Connecting and syncing the database
@@ -31,7 +32,7 @@ app.use("/api/flightDate", flightDateRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
-
+app.use("/api/seats", seatRoutes);
 
 // Creating a server
 app.listen(3000, () => {
