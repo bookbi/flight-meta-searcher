@@ -4,7 +4,7 @@ const { Pool } = require("pg");
 const app = express();
 app.use(express.json());
 
-// ✅ config PostgreSQL
+//  config PostgreSQL
 const pool = new Pool({
   user: "postgres",     // ชื่อ user ของคุณ
   host: "localhost",
@@ -30,7 +30,7 @@ function generateSeats(totalSeats, planeId) {
   return seatMap;
 }
 
-// ✅ สร้างที่นั่งตามเครื่องบิน
+//  สร้างที่นั่งตามเครื่องบิน
 app.post("/planes/:planeId/seats/init", async (req, res) => {
   const planeId = req.params.planeId;
 
@@ -59,7 +59,7 @@ app.post("/planes/:planeId/seats/init", async (req, res) => {
   }
 });
 
-// ✅ จองที่นั่ง
+//  จองที่นั่ง
 app.post("/planes/:planeId/seats/reserve", async (req, res) => {
   const { seatNumber } = req.body;
   const planeId = req.params.planeId;
@@ -86,7 +86,7 @@ app.post("/planes/:planeId/seats/reserve", async (req, res) => {
   }
 });
 
-// ✅ ดูที่นั่งทั้งหมด
+//  ดูที่นั่งทั้งหมด
 app.get("/planes/:planeId/seats", async (req, res) => {
   const planeId = req.params.planeId;
 
@@ -102,7 +102,7 @@ app.get("/planes/:planeId/seats", async (req, res) => {
   }
 });
 
-// ✅ ยกเลิกที่นั่ง
+//  ยกเลิกที่นั่ง
 app.post("/planes/:planeId/seats/cancel", async (req, res) => {
   const { seatNumber } = req.body;
   const planeId = req.params.planeId;
@@ -131,5 +131,5 @@ app.post("/planes/:planeId/seats/cancel", async (req, res) => {
 
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Seat API running with PostgreSQL at http://localhost:${PORT}`);
+  console.log(` Seat API running with PostgreSQL at http://localhost:${PORT}`);
 });
