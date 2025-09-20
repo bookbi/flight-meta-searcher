@@ -18,6 +18,7 @@ const FlightAirport = sequelize.define('FlightAirport', {
     departure: {
         type: DataTypes.STRING(3),
         allowNull: false,
+        validate: { is: /^[A-Z]{3}$/ },
         set(value) {
             this.setDataValue('departure', value.toUpperCase());
         }
@@ -25,6 +26,7 @@ const FlightAirport = sequelize.define('FlightAirport', {
     arrival: {
         type: DataTypes.STRING(3),
         allowNull: false,
+        validate: { is: /^[A-Z]{3}$/ },
         set(value) {
             this.setDataValue('arrival', value.toUpperCase());
         }
