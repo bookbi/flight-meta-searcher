@@ -10,11 +10,17 @@ Our Feature
 
 
 // Setting up routes
+
 app.use('/api/flight-airport', flightRoutes);
+
 app.use("/api/flightDate", flightDateRoutes);
+
 app.use('/api/bookings', bookingRoutes);
+
 app.use("/api/auth", authRoutes);
+
 app.use("/api/admin", adminRoutes);
+
 app.use("/api/seats", seatRoutes);
 
 
