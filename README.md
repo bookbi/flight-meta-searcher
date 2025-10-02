@@ -9,18 +9,20 @@ Our Feature
 5. check-in
 
 
+## Project Structure
+```plaintext
 FLIGHT-META-SEARCHER/
 ├── check-in/                     # โมดูลเช็กอิน
-│   └── migrateJsonToPostgres.js  # script migration
+│   ├── migrateJsonToPostgres.js  # script migration
 │   └── seatApi.js                # API จัดการที่นั่ง
 │
-├── config/                       # การตั้งค่าระบบ
+├── config/                       # การตั้งค่า
 │   ├── database.js               # เชื่อมต่อ PostgreSQL
 │   ├── jwt.js                    # JWT helper
-│   ├── planes.json               # ข้อมูล mockup เครื่องบิน
-│   └── seats.json                # ข้อมูล mockup ที่นั่ง
+│   ├── planes.json               # mockup เครื่องบิน
+│   └── seats.json                # mockup ที่นั่ง
 │
-├── controllers/                  # Logic ของ API
+├── controllers/                  # Logic API
 │   ├── admin_AuthController.js
 │   ├── authController.js
 │   ├── flight-airport.controller.js
@@ -51,7 +53,7 @@ FLIGHT-META-SEARCHER/
 │
 ├── .env.example                  # Example env variables
 ├── .gitignore
-├── app.js                        # Entry point ของ server
+├── app.js                        # Entry point server
 ├── package.json
 ├── package-lock.json
 └── README.md
@@ -77,25 +79,30 @@ app.use("/api/seats", seatRoutes);
 POST /auth/register – สมัครสมาชิก
 POST /auth/login – เข้าสู่ระบบ (คืน JWT Token)
 GET /auth/me – ดูข้อมูลผู้ใช้ (ต้องใส่ Bearer Token)
+
 ✈️ Flight Airport
 GET /api/flight-airport – ดูทั้งหมด
 GET /api/flight-airport/:id – ดูตาม id
 POST /api/flight-airport – เพิ่ม flight
 PUT /api/flight-airport/:id – อัปเดต flight
 DELETE /api/flight-airport/:id – ลบ flight
+
 🗓️ Flight Dates
 GET /api/flight-dates
 POST /api/flight-dates
 PUT /api/flight-dates/:id
 DELETE /api/flight-dates/:id
+
 🛫 Booking
 POST /api/bookings – จองตั๋ว
 GET /api/bookings/:id – ดูการจอง
+
 🪑 Seat API
 POST /planes/:planeId/seats/init – สร้างที่นั่งจากจำนวนที่นั่ง
 POST /planes/:planeId/seats/reserve – จองที่นั่ง
 POST /planes/:planeId/seats/cancel – ยกเลิกที่นั่ง
 GET /seats – ดูที่นั่งทั้งหมด
+
 🛠️ Tech Stack
 Node.js + Express.js
 PostgreSQL + Sequelize ORM
