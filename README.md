@@ -7,3 +7,21 @@ Our Feature
 3. flight date
 4. bookings
 5. check-in
+
+
+// Setting up routes
+app.use('/api/flight-airport', flightRoutes);
+app.use("/api/flightDate", flightDateRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/seats", seatRoutes);
+
+
+## Tech Stack
+- Node.js
+- Express
+- PostgreSQL
+- Sequelize ORM
+- JWT Authentication
+- Morgan (logger)
