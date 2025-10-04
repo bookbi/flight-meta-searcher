@@ -1,5 +1,5 @@
 // booking/services/bookingService.js
-const { sequelize } = require('../../config/database');
+const { sequelize } = require('../config/database');
 const Booking = require('../models/booking');
 
 class BookingValidationService {
